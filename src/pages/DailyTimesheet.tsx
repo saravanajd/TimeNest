@@ -1,11 +1,22 @@
 import { useDailyTimesheet } from '../hooks/useDailyTimesheet';
+import { useSearchParams } from 'react-router-dom';
 import QuickTaskEntry from '../components/tasks/QuickTaskEntry';
 import TaskRow from '../components/tasks/TaskRow';
 import { formatDuration } from '../utils/duration';
-import { formatWorkdayDate, shiftWorkdayDate } from '../utils/workday';
+import { formatWorkdayDate, shiftWorkdayDate, validateWorkdayDate } from '../utils/workday';
 
 function DailyTimesheet() {
-  const daily = useDailyTimesheet();
+  const [params] = useSearchParams();
+  let requestedDate = params.get('date');
+  let dateError = '';
+  if (requestedDate !== null) {
+    try { validateWorkdayDate(requestedDate); }
+    catch {
+      dateError = 'The linked workday date is invalid. Showing the current workday instead.';
+      requestedDate = null;
+    }
+  }
+  const daily = useDailyTimesheet(requestedDate);
   const date = daily.selectedDate;
   const timeZone = daily.preferences?.timeZone;
   const pending = daily.tasks.filter((task) => !task.isCompleted);
@@ -14,6 +25,7 @@ function DailyTimesheet() {
 
   return (
     <section className="daily-page" aria-labelledby="daily-title">
+      {dateError && <p className="alert alert-warning" role="alert">{dateError}</p>}
       <div className="daily-heading">
         <div>
           <p className="eyebrow mb-1">Your workday</p>

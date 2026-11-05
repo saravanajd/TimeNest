@@ -6,7 +6,8 @@ import {
   connectFirestoreEmulator, doc, getDoc, getFirestore, setDoc, type Firestore,
 } from 'firebase/firestore/lite';
 import { doc as fullDoc, setDoc as fullSetDoc } from 'firebase/firestore';
-import { createTask, deleteTask, editTask, getTasks, newTaskId, reorderTasks, setTaskCompleted } from '../src/services/taskService';
+import { createTask, deleteTask, editTask, getTasks, getTasksInRange, newTaskId, reorderTasks, setTaskCompleted } from '../src/services/taskService';
+import { buildReport } from '../src/utils/reports';
 
 const fixture = vi.hoisted(() => ({ database: null as Firestore | null }));
 vi.mock('../src/services/firebase', () => ({
@@ -44,6 +45,28 @@ afterAll(async () => {
 });
 
 describe('actual task service against the Firestore emulator', () => {
+  it('queries inclusive workday ranges, includes completed tasks and excludes other dates', async () => {
+    const range = { start: '2026-10-31', end: '2026-11-01' };
+    await createTask('alice', 'before', '2026-10-30', input, 0);
+    await createTask('alice', 'start', range.start, {
+      ...input, startTime: new Date('2026-11-01T05:30Z'), endTime: new Date('2026-11-01T08:30Z'),
+    }, 0);
+    await setTaskCompleted('alice', 'start', true);
+    await createTask('alice', 'end', range.end, {
+      ...input, projectId: 'project', startTime: new Date('2026-11-01T22:00Z'), endTime: new Date('2026-11-01T22:30Z'),
+    }, 0);
+    await createTask('alice', 'after', '2026-11-02', input, 0);
+    const tasks = await getTasksInRange('alice', range.start, range.end);
+    expect(tasks.map((task) => task.id)).toEqual(['start', 'end']);
+    expect(buildReport(tasks, range)).toMatchObject({
+      totalMinutes: 210, completedCount: 1, pendingCount: 1, workdayCount: 2,
+    });
+    expect(await getTasksInRange('alice', '2026-12-01', '2026-12-31')).toEqual([]);
+    await expect(getTasksInRange('alice', range.end, range.start)).rejects.toThrow(/start/);
+    fixture.database = client('timenest-range-bob', 'bob');
+    await expect(getTasksInRange('alice', range.start, range.end)).rejects.toThrow();
+  });
+
   it('creates without a project, stores UTC timestamps, and loads from a fresh client', async () => {
     const id = newTaskId('alice');
     const saved = await createTask('alice', id, '2026-11-05', input, 0);

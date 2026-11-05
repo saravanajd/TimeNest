@@ -1,6 +1,6 @@
 # TimeNest
 
-TimeNest is a personal timesheet and task-tracking application. Phase 3 adds a daily timesheet with quick entry, completion/reopening, inline editing, deletion, ordering, project assignment, and elapsed-time totals. Weekly/monthly reports, export, AI, and offline support are not implemented.
+TimeNest is a personal timesheet and task-tracking application. Phases 1-4 provide authentication, settings and projects, a daily timesheet, and weekly/monthly reports. Excel export, AI, and offline support are not implemented.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ TimeNest is a personal timesheet and task-tracking application. Phase 3 adds a d
 
 New to Firebase? Follow the [step-by-step Firebase setup guide](./docs/firebase-setup.md). It covers creating the project, finding each web configuration value, enabling sign-in, creating Firestore, deploying the security rules, and configuring local development and GitHub Pages.
 
-The app stops at a setup screen when its Firebase web configuration is missing. Firebase Auth sessions persist in the browser; private task, project, and preference documents live under `users/{userId}` and are protected by the Firestore rules. Data loads when a workday or settings page opens; use **Refresh tasks** to see changes made on another device. Realtime and offline synchronization are not enabled.
+The app stops at a setup screen when its Firebase web configuration is missing. Firebase Auth sessions persist in the browser; private task, project, and preference documents live under `users/{userId}` and are protected by the Firestore rules. Data loads when a workday, report, or settings page opens; use **Refresh tasks** or **Refresh report** to see changes made on another device. Realtime and offline synchronization are not enabled.
 
 ## Daily Timesheet
 
@@ -35,6 +35,18 @@ npx firebase deploy --only firestore:rules --project YOUR_FIREBASE_PROJECT_ID
 
 The updated rules enforce valid task time ranges, consistent duration, and nonnegative integer ordering as well as user isolation.
 
+## Weekly and monthly reports
+
+- **Weekly View** uses Monday-Sunday weeks. **Monthly Report** uses calendar months of stored workday dates. Both open the period containing the current workday, honoring saved rollover and time-zone preferences; before 4:00 PM on the first calendar day of a month, the default workday still belongs to the previous month.
+- Use previous/next/current period buttons or select a date (weekly) or month and year (monthly). Click any day's heading to open that exact workday in Daily Timesheet.
+- Reports include pending and completed tasks, daily and period totals, project totals, task/status counts, and **workdays with recorded tasks**. A workday with an untimed task counts as recorded even when its total is zero. Empty days are displayed but do not count as recorded workdays.
+- Filter by a specific project, **No project**, or **All projects**, and optionally narrow the inclusive from/through dates within the selected period. Totals and counts reflect these filters. Date filters reset when the reporting period changes; the project selection stays selected. **Clear filters** restores the full period and all projects.
+- Inactive and unavailable/deleted projects remain visible in historical reports. Completed tasks are never removed from totals.
+- Reports sum the same stored integer minutes as Daily Timesheet, without independently rounding hours or rebucketing overnight/DST tasks by their UTC timestamps. Start/end times display in the saved time zone; `taskDate` remains the authoritative workday assignment.
+- **Refresh report** reloads saved preferences, projects, and the selected period's tasks. Loading and failures are shown explicitly; retry does not show an empty successful report after an error.
+- Phase 4 needs no new Firebase configuration or rule changes if the Phase 3 rules are already deployed. Range queries use the existing single-field `taskDate` index (no new composite index).
+- Excel export is reserved for Phase 5 and is not available yet.
+
 ## Run locally
 
 ```sh
@@ -48,13 +60,13 @@ npm run dev
 npm test
 ```
 
-Runs workday rollover/DST, date/time validation, and daily UI lifecycle tests without contacting Firebase.
+Runs workday rollover/DST, date/time validation, daily UI lifecycle, report calculations, filters, navigation, and report error/loading tests without contacting Firebase.
 
 ```sh
 npm run test:firebase
 ```
 
-Runs the checked-in rules tests and actual task-service CRUD/persistence tests against the local Firestore emulator. Requires Java 21 or newer; does not use the live Firebase project or `.env` credentials.
+Runs the checked-in rules tests and actual task-service CRUD/persistence and inclusive report-range tests against the local Firestore emulator. Requires Java 21 or newer; does not use the live Firebase project or `.env` credentials.
 
 ```sh
 npm run test:rules
@@ -80,14 +92,14 @@ src/
 ├── app/                 # App composition and route definitions
 ├── components/           # Shared UI and application layout
 ├── contexts/             # Authentication state
-├── hooks/                # Daily timesheet state and operations
+├── hooks/                # Daily timesheet and report state/operations
 ├── models/               # Typed task, project, and preference models
 ├── pages/                # Route pages, sign-in, and setup screens
 ├── services/             # Firebase initialization and Firestore access
-├── utils/                # Shared workday, date/time, and duration rules
+├── utils/                # Shared workday, date/time, duration, and report rules
 └── styles/               # Application-specific styles
 firestore.rules           # User-scoped Firestore access control
-tests/                    # Firestore emulator rule tests
+tests/                    # Business-rule, UI, and Firestore emulator tests
 ```
 
 See [plan.md](./plan.md) for the product requirements and phased development plan.

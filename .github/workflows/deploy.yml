@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Test workday rules and daily UI
+      - name: Test workday rules, daily UI, and reports
         run: npm test
 
       - name: Build application

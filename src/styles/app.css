@@ -344,6 +344,74 @@ body {
   overflow-wrap: anywhere;
 }
 
+.report-page {
+  width: min(100%, 58rem);
+}
+
+.report-navigation,
+.report-day-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.report-navigation input {
+  width: auto;
+}
+
+.report-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 1rem;
+}
+
+.report-summary span,
+.report-summary strong {
+  display: block;
+}
+
+.report-summary span {
+  color: #657187;
+  font-size: 0.85rem;
+}
+
+.report-summary strong {
+  font-size: 1.3rem;
+  color: #364bb8;
+}
+
+.report-day-heading {
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.report-day-heading h2 {
+  margin: 0;
+}
+
+.report-task-list,
+.report-project-totals {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.report-task-list li + li {
+  border-top: 1px solid #e9edf5;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
+
+.report-project-totals li {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 575.98px) {
   .app-nav {
     gap: 0.15rem;
@@ -375,5 +443,9 @@ body {
 
   .day-navigation button {
     flex: 1;
+  }
+
+  .report-navigation input {
+    width: 100%;
   }
 }

@@ -13,7 +13,7 @@ import { getWorkdayDate, validateWorkdayDate, validateWorkdaySettings } from '..
 
 type LoadedTasks = { date: string; tasks: Task[] };
 
-export function useDailyTimesheet() {
+export function useDailyTimesheet(requestedDate: string | null = null) {
   const { user } = useAuth();
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -22,7 +22,7 @@ export function useDailyTimesheet() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [clock, setClock] = useState(() => new Date());
-  const [pinnedDate, setPinnedDate] = useState<string | null>(null);
+  const [pinnedDate, setPinnedDate] = useState<string | null>(requestedDate);
   const [loaded, setLoaded] = useState<LoadedTasks | null>(null);
   const [busy, setBusy] = useState(false);
   const mutationLock = useRef(false);
@@ -31,6 +31,10 @@ export function useDailyTimesheet() {
   const selectedDate = pinnedDate ?? currentDate;
   const activeDate = useRef(selectedDate);
   activeDate.current = selectedDate;
+
+  useEffect(() => {
+    setPinnedDate(requestedDate);
+  }, [requestedDate]);
 
   useEffect(() => {
     const tick = () => setClock(new Date());

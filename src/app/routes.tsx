@@ -1,11 +1,11 @@
 import { lazy, Suspense } from 'react';
 import { Route, Routes } from 'react-router-dom';
-import MonthlyReport from '../pages/MonthlyReport';
-import WeeklyView from '../pages/WeeklyView';
 import PagePlaceholder from '../components/common/PagePlaceholder';
 
 const Settings = lazy(() => import('../pages/Settings'));
 const DailyTimesheet = lazy(() => import('../pages/DailyTimesheet'));
+const WeeklyView = lazy(() => import('../pages/WeeklyView'));
+const MonthlyReport = lazy(() => import('../pages/MonthlyReport'));
 
 function AppRoutes() {
   return (
@@ -15,8 +15,8 @@ function AppRoutes() {
           <DailyTimesheet />
         </Suspense>
       } />
-      <Route path="/weekly" element={<WeeklyView />} />
-      <Route path="/monthly" element={<MonthlyReport />} />
+      <Route path="/weekly" element={<Suspense fallback={<div role="status">Loading weekly report...</div>}><WeeklyView /></Suspense>} />
+      <Route path="/monthly" element={<Suspense fallback={<div role="status">Loading monthly report...</div>}><MonthlyReport /></Suspense>} />
       <Route
         path="/settings"
         element={

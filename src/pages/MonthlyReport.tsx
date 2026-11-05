@@ -1,11 +1,8 @@
-import PagePlaceholder from '../components/common/PagePlaceholder';
+import ReportView from '../components/reports/ReportView';
 
 function MonthlyReport() {
   return (
-    <PagePlaceholder
-      title="Monthly Report"
-      description="Your monthly timesheet summaries will be available here."
-    />
+    <ReportView period="monthly" />
   );
 }
 

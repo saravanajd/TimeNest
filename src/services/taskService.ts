@@ -5,6 +5,7 @@ import {
 import type { Task, TaskInput } from '../models/task';
 import { calculateDurationMinutes } from '../utils/duration';
 import { validateWorkdayDate } from '../utils/workday';
+import { validateDateRange } from '../utils/reports';
 import { requireFirestore, timestampToDate } from './firestoreHelpers';
 
 function tasksCollection(userId: string) {
@@ -69,6 +70,16 @@ export async function getTasks(userId: string, taskDate: string): Promise<Task[]
   return snapshot.docs.map((item) => parseTask(item.id, item.data()))
     .sort((a, b) => a.sortOrder - b.sortOrder ||
       a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
+}
+
+export async function getTasksInRange(userId: string, start: string, end: string): Promise<Task[]> {
+  validateDateRange({ start, end });
+  const snapshot = await getDocs(query(
+    tasksCollection(userId), where('taskDate', '>=', start), where('taskDate', '<=', end),
+  ));
+  return snapshot.docs.map((item) => parseTask(item.id, item.data())).sort((a, b) =>
+    a.taskDate.localeCompare(b.taskDate) || a.sortOrder - b.sortOrder ||
+    a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id));
 }
 
 export async function createTask(

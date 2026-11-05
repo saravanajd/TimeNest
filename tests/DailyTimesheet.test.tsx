@@ -2,8 +2,9 @@
 import '@testing-library/jest-dom/vitest';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import DailyTimesheet from '../src/pages/DailyTimesheet';
+import DailyTimesheetPage from '../src/pages/DailyTimesheet';
 import type { Task } from '../src/models/task';
 import { DEFAULT_USER_PREFERENCES } from '../src/models/preferences';
 
@@ -13,6 +14,9 @@ const mocks = vi.hoisted(() => ({
   reorderTasks: vi.fn(), setTaskCompleted: vi.fn(), newTaskId: vi.fn(),
   getProjects: vi.fn(), getPreferences: vi.fn(),
 }));
+function DailyTimesheet() {
+  return <MemoryRouter><DailyTimesheetPage /></MemoryRouter>;
+}
 vi.mock('../src/contexts/AuthContext', () => ({ useAuth: () => ({ user: mocks.user }) }));
 vi.mock('../src/services/taskService', () => mocks);
 vi.mock('../src/services/projectService', () => ({ getProjects: mocks.getProjects }));
@@ -57,6 +61,26 @@ async function openDaily() {
 }
 
 describe('daily task entry and day navigation', () => {
+  it('opens a linked workday and permits creating tasks and navigating from that day', async () => {
+    render(<MemoryRouter initialEntries={['/?date=2026-10-31']}><DailyTimesheetPage /></MemoryRouter>);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Add task' })).toBeEnabled());
+    expect(mocks.getTasks).toHaveBeenCalledWith('test-user', '2026-10-31');
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText('Task description'), 'Linked day task{Enter}');
+    await screen.findByText('Linked day task');
+    expect(mocks.createTask.mock.calls[0][2]).toBe('2026-10-31');
+    await user.click(screen.getByRole('button', { name: 'Next day' }));
+    await waitFor(() => expect(mocks.getTasks).toHaveBeenLastCalledWith('test-user', '2026-11-01'));
+    await user.click(screen.getByRole('button', { name: 'Current workday' }));
+    await waitFor(() => expect(mocks.getTasks).toHaveBeenLastCalledWith('test-user', '2026-11-05'));
+  });
+
+  it('reports invalid linked dates and opens the current workday instead', async () => {
+    render(<MemoryRouter initialEntries={['/?date=2026-02-30']}><DailyTimesheetPage /></MemoryRouter>);
+    expect(screen.getByRole('alert')).toHaveTextContent('linked workday date is invalid');
+    await waitFor(() => expect(mocks.getTasks).toHaveBeenCalledWith('test-user', '2026-11-05'));
+  });
+
   it('opens the previous workday after midnight and saves with Enter, clears and refocuses', async () => {
     await openDaily();
     expect(mocks.getTasks).toHaveBeenCalledWith('test-user', '2026-11-05');
