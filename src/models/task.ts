@@ -12,3 +12,5 @@ export type Task = {
   createdAt: Date;
   updatedAt: Date;
 };
+
+export type TaskInput = Pick<Task, 'title' | 'projectId' | 'startTime' | 'endTime'>;

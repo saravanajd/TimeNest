@@ -1,6 +1,7 @@
 import { doc, getDoc, serverTimestamp, setDoc, type DocumentData } from 'firebase/firestore/lite';
 import type { UserPreferences } from '../models/preferences';
 import { requireFirestore } from './firestoreHelpers';
+import { validateWorkdaySettings } from '../utils/workday';
 
 function preferencesDocument(userId: string) {
   return doc(requireFirestore(), 'users', userId, 'settings', 'preferences');
@@ -32,6 +33,7 @@ export async function getPreferences(userId: string): Promise<UserPreferences | 
 }
 
 export async function savePreferences(userId: string, preferences: UserPreferences) {
+  validateWorkdaySettings(preferences);
   await setDoc(
     preferencesDocument(userId),
     {

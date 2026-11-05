@@ -5,7 +5,7 @@ import {
   assertSucceeds,
   initializeTestEnvironment,
 } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const projectId = 'timenest-rules-test';
 let testEnvironment;
@@ -109,4 +109,24 @@ test('project documents reject unexpected fields', async () => {
     updatedAt: now,
     privateNote: 'not an allowed field',
   }));
+});
+
+test('task rules reject invalid ranges, inconsistent durations, and negative ordering', async () => {
+  const database = testEnvironment.authenticatedContext('alice').firestore();
+  const reference = doc(database, 'users/alice/tasks/one');
+  const now = new Date();
+  const task = {
+    taskDate: '2026-11-05', title: 'Timed task', improvedTitle: null, projectId: null,
+    startTime: new Date('2026-11-06T05:30Z'), endTime: new Date('2026-11-06T07:00Z'),
+    durationMinutes: 90, isCompleted: false, sortOrder: 0, createdAt: now, updatedAt: now,
+  };
+  await assertSucceeds(setDoc(reference, task));
+  await assertFails(updateDoc(reference, { durationMinutes: 91 }));
+  await assertFails(updateDoc(reference, { startTime: null }));
+  await assertFails(updateDoc(reference, { endTime: new Date('2026-11-06T04:00Z') }));
+  await assertFails(updateDoc(reference, { sortOrder: -1 }));
+  await assertSucceeds(updateDoc(reference, { isCompleted: true }));
+  await assertSucceeds(updateDoc(reference, { isCompleted: false }));
+  const other = testEnvironment.authenticatedContext('bob').firestore();
+  await assertFails(deleteDoc(doc(other, 'users/alice/tasks/one')));
 });

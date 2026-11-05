@@ -57,8 +57,15 @@ service cloud.firestore {
         && (data.endTime == null || data.endTime is timestamp)
         && data.durationMinutes is int
         && data.durationMinutes >= 0
+        && (
+          (data.endTime == null && data.durationMinutes == 0)
+          || (data.startTime is timestamp && data.endTime is timestamp
+            && data.endTime >= data.startTime
+            && data.durationMinutes == int((data.endTime.toMillis() - data.startTime.toMillis()) / 60000.0 + 0.5))
+        )
         && data.isCompleted is bool
-        && data.sortOrder is number
+        && data.sortOrder is int
+        && data.sortOrder >= 0
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
     }

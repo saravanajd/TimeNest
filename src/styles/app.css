@@ -263,6 +263,87 @@ body {
   background: #f7f8fb;
 }
 
+.daily-page {
+  width: min(100%, 58rem);
+}
+
+.daily-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.daily-total {
+  display: grid;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.daily-total strong {
+  color: #364bb8;
+  font-size: 1.5rem;
+}
+
+.day-navigation,
+.task-actions,
+.task-delete-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.day-navigation input {
+  width: auto;
+}
+
+.daily-empty {
+  padding: 2rem;
+  border: 1px dashed #ccd5e4;
+  border-radius: 1rem;
+  background: #fff;
+  text-align: center;
+}
+
+.task-list {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.task-row {
+  padding: 1rem;
+  border: 1px solid #e9edf5;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.task-row__title {
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.task-row--completed .task-row__title {
+  color: #657187;
+  text-decoration: line-through;
+}
+
+.task-content {
+  min-width: 0;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: #657187;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 575.98px) {
   .app-nav {
     gap: 0.15rem;
@@ -281,5 +362,18 @@ body {
 
   .account-email {
     max-width: calc(100vw - 10rem);
+  }
+
+  .daily-heading {
+    align-items: flex-start;
+  }
+
+  .day-navigation input {
+    width: 100%;
+    order: -1;
+  }
+
+  .day-navigation button {
+    flex: 1;
   }
 }

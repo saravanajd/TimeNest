@@ -1,6 +1,6 @@
 # TimeNest
 
-TimeNest is a personal timesheet and task-tracking application. The current phase provides Firebase email/password authentication, private Firestore-backed projects and preferences, and the shared application shell. Daily task management is not implemented yet.
+TimeNest is a personal timesheet and task-tracking application. Phase 3 adds a daily timesheet with quick entry, completion/reopening, inline editing, deletion, ordering, project assignment, and elapsed-time totals. Weekly/monthly reports, export, AI, and offline support are not implemented.
 
 ## Requirements
 
@@ -13,7 +13,27 @@ TimeNest is a personal timesheet and task-tracking application. The current phas
 
 New to Firebase? Follow the [step-by-step Firebase setup guide](./docs/firebase-setup.md). It covers creating the project, finding each web configuration value, enabling sign-in, creating Firestore, deploying the security rules, and configuring local development and GitHub Pages.
 
-The app stops at a setup screen when its Firebase web configuration is missing. Firebase Auth sessions persist in the browser; private project and preference documents live under `users/{userId}` and are protected by the Firestore rules. Phase 2 reads persisted data when settings open; realtime and offline synchronization are not enabled.
+The app stops at a setup screen when its Firebase web configuration is missing. Firebase Auth sessions persist in the browser; private task, project, and preference documents live under `users/{userId}` and are protected by the Firestore rules. Data loads when a workday or settings page opens; use **Refresh tasks** to see changes made on another device. Realtime and offline synchronization are not enabled.
+
+## Daily Timesheet
+
+- The default workday runs from **4:00 PM to 1:00 AM the following calendar day**, in **America/Chicago**. The workday date rolls over at 4:00 PM, not midnight; entries before 4:00 PM belong to the previous workday.
+- Saved workday start/end and IANA time-zone preferences are honored. All current-day selection uses the shared workday utility and daylight-saving-aware conversion.
+- Type a description and press **Enter** to save. The input clears and refocuses after confirmation. Project assignment is optional and AI is never involved.
+- Previous/next day, the date picker, and **Current workday** load the selected day's saved tasks. Current workday follows rollover automatically; explicitly selected historical days stay selected.
+- Use a checkbox to complete or reopen a task. Completed tasks remain stored and contribute to the daily total.
+- **Edit** opens an inline form for the title, project, and start/end dates and times. Times are interpreted in the saved time zone, not the browser's zone. For an overnight task, set the end date to the following day.
+- Actual time instants are stored as UTC Firestore timestamps separately from `taskDate`. Duration is elapsed UTC time rounded to the nearest whole minute; untimed or start-only tasks contribute zero. An end without a start, backwards ranges, nonexistent DST times, and ambiguous repeated DST times are rejected with an error.
+- Up/down controls reorder tasks within pending or completed groups. Ordering is persisted atomically (up to Firestore's 500-write batch limit per workday).
+- Deletion requires inline confirmation. Failed saves keep your input; an explicit retry of the same quick-entry submission reuses its stable ID to avoid duplicates. Internet access is required for saving.
+
+**Deploy the updated Firestore rules before using Phase 3:**
+
+```sh
+npx firebase deploy --only firestore:rules --project YOUR_FIREBASE_PROJECT_ID
+```
+
+The updated rules enforce valid task time ranges, consistent duration, and nonnegative integer ordering as well as user isolation.
 
 ## Run locally
 
@@ -22,13 +42,25 @@ npm ci
 npm run dev
 ```
 
-## Test Firestore rules
+## Tests
+
+```sh
+npm test
+```
+
+Runs workday rollover/DST, date/time validation, and daily UI lifecycle tests without contacting Firebase.
+
+```sh
+npm run test:firebase
+```
+
+Runs the checked-in rules tests and actual task-service CRUD/persistence tests against the local Firestore emulator. Requires Java 21 or newer; does not use the live Firebase project or `.env` credentials.
 
 ```sh
 npm run test:rules
 ```
 
-This starts the Firestore emulator and runs ownership, unauthenticated-access, and document-validation tests against the checked-in rules.
+Runs only the Firestore ownership and document-validation rules tests.
 
 ## Build
 
@@ -48,9 +80,11 @@ src/
 ├── app/                 # App composition and route definitions
 ├── components/           # Shared UI and application layout
 ├── contexts/             # Authentication state
+├── hooks/                # Daily timesheet state and operations
 ├── models/               # Typed task, project, and preference models
 ├── pages/                # Route pages, sign-in, and setup screens
 ├── services/             # Firebase initialization and Firestore access
+├── utils/                # Shared workday, date/time, and duration rules
 └── styles/               # Application-specific styles
 firestore.rules           # User-scoped Firestore access control
 tests/                    # Firestore emulator rule tests
