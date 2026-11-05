@@ -133,6 +133,136 @@ body {
   text-align: center;
 }
 
+.account-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid #e8edf5;
+}
+
+.account-email {
+  max-width: 13rem;
+  overflow: hidden;
+  color: #657187;
+  font-size: 0.8rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #657187;
+}
+
+.app-content {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.auth-card {
+  width: min(100%, 30rem);
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid #e9edf5;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 1rem 2.5rem rgb(35 48 71 / 5%);
+}
+
+.auth-card > .page-placeholder__icon {
+  margin-bottom: 1.25rem;
+}
+
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+}
+
+.setup-steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+  padding-left: 1.25rem;
+  color: #526078;
+}
+
+.config-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding-left: 1rem;
+}
+
+.settings-page {
+  width: min(100%, 58rem);
+}
+
+.settings-page__intro {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  color: #5368d5;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.settings-panel {
+  margin-bottom: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border: 1px solid #e9edf5;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.5rem 1.5rem rgb(35 48 71 / 3%);
+}
+
+.settings-panel__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.project-create-form {
+  margin-bottom: 1rem;
+}
+
+.project-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-row {
+  padding: 0.75rem;
+  border: 1px solid #edf0f5;
+  border-radius: 0.75rem;
+}
+
+.empty-projects {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  color: #7b879a;
+  background: #f7f8fb;
+}
+
 @media (max-width: 575.98px) {
   .app-nav {
     gap: 0.15rem;
@@ -141,5 +271,15 @@ body {
   .app-nav__link {
     padding: 0.45rem 0.6rem;
     font-size: 0.82rem;
+  }
+
+  .account-controls {
+    justify-content: space-between;
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .account-email {
+    max-width: calc(100vw - 10rem);
   }
 }

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 type AppLayoutProps = {
   children: ReactNode;
@@ -13,6 +15,18 @@ const navigationItems = [
 ];
 
 function AppLayout({ children }: AppLayoutProps) {
+  const { configured, signOutUser, user } = useAuth();
+  const [signOutError, setSignOutError] = useState('');
+
+  async function handleSignOut() {
+    setSignOutError('');
+    try {
+      await signOutUser();
+    } catch (error) {
+      setSignOutError(error instanceof Error ? error.message : 'Could not sign out.');
+    }
+  }
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -28,25 +42,36 @@ function AppLayout({ children }: AppLayoutProps) {
               </span>
             </NavLink>
 
-            <nav aria-label="Main navigation">
-              <ul className="nav app-nav flex-wrap">
-                {navigationItems.map(({ to, label, icon, end }) => (
-                  <li className="nav-item" key={to}>
-                    <NavLink
-                      to={to}
-                      end={end}
-                      className={({ isActive }) =>
-                        `nav-link app-nav__link${isActive ? ' active' : ''}`
-                      }
-                    >
-                      <i className={`bi ${icon}`} aria-hidden="true" />
-                      <span>{label}</span>
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </nav>
+            {configured && user && (
+              <div className="d-flex flex-column flex-sm-row align-items-sm-center gap-2">
+                <nav aria-label="Main navigation">
+                  <ul className="nav app-nav flex-wrap">
+                    {navigationItems.map(({ to, label, icon, end }) => (
+                      <li className="nav-item" key={to}>
+                        <NavLink
+                          to={to}
+                          end={end}
+                          className={({ isActive }) =>
+                            `nav-link app-nav__link${isActive ? ' active' : ''}`
+                          }
+                        >
+                          <i className={`bi ${icon}`} aria-hidden="true" />
+                          <span>{label}</span>
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+                <div className="account-controls">
+                  <span className="account-email" title={user.email ?? undefined}>{user.email}</span>
+                  <button className="btn btn-outline-secondary btn-sm" onClick={handleSignOut} type="button">
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+          {signOutError && <p className="alert alert-danger py-2 mb-3" role="alert">{signOutError}</p>}
         </div>
       </header>
 

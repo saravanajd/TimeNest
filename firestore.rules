@@ -1,0 +1,97 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function ownsUserData(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validProject() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'description', 'isActive', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['name', 'description', 'isActive', 'createdAt', 'updatedAt'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 100
+        && data.description is string
+        && data.description.size() <= 500
+        && data.isActive is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function validPreferences() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['timeZone', 'workdayStart', 'workdayEnd', 'aiEnabled', 'reminderTime'])
+        && data.keys().hasOnly(['timeZone', 'workdayStart', 'workdayEnd', 'aiEnabled', 'reminderTime', 'updatedAt'])
+        && data.timeZone is string
+        && data.timeZone.size() > 0
+        && data.timeZone.size() <= 100
+        && data.workdayStart is string
+        && data.workdayStart.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && data.workdayEnd is string
+        && data.workdayEnd.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && data.aiEnabled is bool
+        && (data.reminderTime == null || data.reminderTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$'))
+        && (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    function validTask() {
+      let data = request.resource.data;
+      return data.keys().hasAll([
+          'taskDate', 'title', 'improvedTitle', 'projectId', 'startTime', 'endTime',
+          'durationMinutes', 'isCompleted', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'taskDate', 'title', 'improvedTitle', 'projectId', 'startTime', 'endTime',
+          'durationMinutes', 'isCompleted', 'sortOrder', 'createdAt', 'updatedAt'
+        ])
+        && data.taskDate is string
+        && data.taskDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 1000
+        && (data.improvedTitle == null || data.improvedTitle is string)
+        && (data.projectId == null || data.projectId is string)
+        && (data.startTime == null || data.startTime is timestamp)
+        && (data.endTime == null || data.endTime is timestamp)
+        && data.durationMinutes is int
+        && data.durationMinutes >= 0
+        && data.isCompleted is bool
+        && data.sortOrder is number
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow read, write: if ownsUserData(userId);
+
+      match /projects/{projectId} {
+        allow read: if ownsUserData(userId);
+        allow create: if ownsUserData(userId) && validProject();
+        allow update: if ownsUserData(userId)
+          && validProject()
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if ownsUserData(userId);
+      }
+
+      match /settings/{settingId} {
+        allow read: if ownsUserData(userId);
+        allow create, update: if ownsUserData(userId)
+          && settingId == 'preferences'
+          && validPreferences();
+        allow delete: if ownsUserData(userId) && settingId == 'preferences';
+      }
+
+      match /tasks/{taskId} {
+        allow read: if ownsUserData(userId);
+        allow create: if ownsUserData(userId) && validTask();
+        allow update: if ownsUserData(userId)
+          && validTask()
+          && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if ownsUserData(userId);
+      }
+
+    }
+  }
+}

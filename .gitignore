@@ -4,6 +4,10 @@ node_modules/
 # Build output
 dist/
 
+# Firebase emulator state and logs
+.firebase/
+firestore-debug.log
+
 # Local environment variables
 .env
 .env.*
